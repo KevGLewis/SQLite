@@ -22,25 +22,13 @@ import android.widget.ListView;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 
-import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.location.LocationListener;
-import com.google.android.gms.location.LocationRequest;
-import com.google.android.gms.location.LocationServices;
-
 // Code derived by the example code from the CS496 lectures
 
-public class SQLocationActivity extends AppCompatActivity implements
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class SQLocationActivity extends AppCompatActivity {
 
-
-    private GoogleApiClient mGoogleApiClient;
-    private LocationRequest mLocationRequest;
     private TextView mLatText;
     private TextView mLonText;
     private Location mLastLocation;
-    private LocationListener mLocationListener;
     private static final int LOCATION_PERMISSON_RESULT = 17;
 
     NoteSQLite mSQLiteExample;
@@ -56,34 +44,6 @@ public class SQLocationActivity extends AppCompatActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sqlocation);
 
-
-        // Google Maps API Code
-
-        if (mGoogleApiClient == null) {
-            mGoogleApiClient = new GoogleApiClient.Builder(this)
-                    .addConnectionCallbacks(this)
-                    .addOnConnectionFailedListener(this)
-                    .addApi(LocationServices.API)
-                    .build();
-        }
-        mLatText = (TextView) findViewById(R.id.lat_out);
-        mLonText = (TextView) findViewById(R.id.lon_out);
-        mLocationRequest = LocationRequest.create();
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-        mLocationRequest.setInterval(5000);
-        mLocationRequest.setFastestInterval(5000);
-        mLocationListener = new LocationListener() {
-            @Override
-            public void onLocationChanged(Location location) {
-                if (location != null) {
-                    mLonText.setText(String.valueOf(location.getLongitude()));
-                    mLatText.setText(String.valueOf(location.getLatitude()));
-                } else {
-                    mLonText.setText("No Location Avaliable");
-                }
-            }
-        };
-
         // Database Setup
 
         mSQLiteExample = new NoteSQLite(this);
@@ -97,10 +57,10 @@ public class SQLocationActivity extends AppCompatActivity implements
                     ContentValues vals = new ContentValues();
 
                     // Get the current location
-                    SimpleLocation tempLoc = getLocation();
+                    //SimpleLocation tempLoc = getLocation();
 
-                    vals.put(DBContract.NoteTable.COLUMN_NAME_LATITUDE, tempLoc.latitude);
-                    vals.put(DBContract.NoteTable.COLUMN_NAME_LONGITUDE, tempLoc.longitude);
+                    //vals.put(DBContract.NoteTable.COLUMN_NAME_LATITUDE, tempLoc.latitude);
+                    //vals.put(DBContract.NoteTable.COLUMN_NAME_LONGITUDE, tempLoc.longitude);
                     vals.put(DBContract.NoteTable.COLUMN_NAME_NOTE, ((EditText)findViewById(R.id.sql_text_input)).getText().toString());
                     mSQLDB.insert(DBContract.NoteTable.TABLE_NAME,null,vals);
                     populateTable();
@@ -117,7 +77,7 @@ public class SQLocationActivity extends AppCompatActivity implements
             @Override
             public void onClick(View v) {
                 Log.d(TAG, "Requesting Permission");
-                PermissionRequest();
+
             }
         });
 
@@ -152,81 +112,6 @@ public class SQLocationActivity extends AppCompatActivity implements
         }
     }
 
-    @Override
-    protected void onStart() {
-        mGoogleApiClient.connect();
-        super.onStart();
-    }
-
-    @Override
-    protected void onStop() {
-        mGoogleApiClient.disconnect();
-        super.onStop();
-    }
-
-    @Override
-    public void onConnected(@Nullable Bundle bundle) {
-        mLatText.setText("onConnect");
-        if (ActivityCompat.checkSelfPermission(this,
-                android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            PermissionRequest();
-            mLonText.setText(String.valueOf(-123.2));
-            mLatText.setText(String.valueOf(44.5));
-            return;
-        }
-        updateLocation();
-    }
-
-    public void PermissionRequest()
-    {
-        ActivityCompat.requestPermissions(this, new String[]{android.Manifest.permission.ACCESS_FINE_LOCATION,
-                                    android.Manifest.permission.ACCESS_COARSE_LOCATION}, LOCATION_PERMISSON_RESULT);
-    }
-
-    @Override
-    public void onConnectionSuspended(int i) {
-
-    }
-
-    @Override
-    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Dialog errDialog = GoogleApiAvailability.getInstance().getErrorDialog(this, connectionResult.getErrorCode(), 0);
-        errDialog.show();
-        return;
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults){
-        if(requestCode == LOCATION_PERMISSON_RESULT){
-            if(grantResults.length > 0){
-                updateLocation();
-            }
-            else{
-                mLonText.setText(String.valueOf(-123.2));
-                mLatText.setText(String.valueOf(44.5));
-            }
-        }
-    }
-
-    private void updateLocation() {
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
-        }
-        LocationServices.FusedLocationApi.requestLocationUpdates(mGoogleApiClient,mLocationRequest,mLocationListener);
-    }
-
-    private SimpleLocation getLocation()
-    {
-        if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                && ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return new SimpleLocation("44.5", "-123.2");
-        }
-
-        Location tempLoc = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-        return new SimpleLocation(String.valueOf(tempLoc.getLatitude()), String.valueOf(tempLoc.getLongitude()));
-    }
 }
 
 class NoteSQLite extends SQLiteOpenHelper {
@@ -277,16 +162,5 @@ final class DBContract {
                 " (" + COLUMN_NAME_NOTE + "," + COLUMN_NAME_LATITUDE + "," + COLUMN_NAME_LONGITUDE + ") VALUES ('test', 123.1, 321.1);";
 
         public  static final String SQL_DROP_DEMO_TABLE = "DROP TABLE IF EXISTS " + NoteTable.TABLE_NAME;
-    }
-}
-
-class SimpleLocation {
-    public String latitude;
-    public String longitude;
-
-    SimpleLocation(String latIn, String longIn)
-    {
-        latitude = latIn;
-        longitude = longIn;
     }
 }

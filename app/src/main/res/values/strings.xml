@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">SQLite</string>
+    <string name="app_client_id">1007134695985-tcubcsu62n1er7eeasncon8ldul3t84r.apps.googleusercontent.com</string>
+    <string name="server_client_id">1007134695985-f378vpoct42aqooctd1hl5tvnrum1pke.apps.googleusercontent.com</string>
 </resources>
